@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en" :class="isDarkMode ? 'dark' : ''">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin System - Supabase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-950 font-sans antialiased text-gray-900 dark:text-gray-100 transition-colors duration-200" x-data="adminSystem()">
+
+    <!-- Toast Notification -->
+    <div x-show="toast.show" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-90 translate-y-2"
+         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+         style="display: none;">
+        <div class="pointer-events-auto bg-gray-900/90 dark:bg-white/90 backdrop-blur-xl text-white dark:text-gray-900 px-6 py-4 rounded-3xl shadow-2xl border border-gray-800 dark:border-gray-200 flex items-center space-x-4 max-w-sm w-full">
+            <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-base shrink-0 shadow-lg" :class="toast.type === 'success' ? 'bg-emerald-500 text-white shadow-emerald-500/30' : 'bg-indigo-500 text-white shadow-indigo-500/30'">
+                <i class="fa-solid" :class="toast.type === 'success' ? 'fa-check' : 'fa-info'"></i>
+            </div>
+            <div>
+                <p class="font-bold text-sm tracking-tight" x-text="toast.title"></p>
+                <p class="text-xs opacity-80 mt-0.5" x-text="toast.message"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Page -->
+    <div x-show="!isLoggedIn" class="min-h-screen flex items-center justify-center p-4 bg-gray-900">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-8 space-y-6">
+            <div class="text-center">
+                <div class="w-14 h-14 bg-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-white text-2xl font-bold mb-4 shadow-lg">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Admin Portal</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Sign in to manage your prompt gallery</p>
+            </div>
+            
+            <form @submit.prevent="login" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-1">Email Address</label>
+                    <input type="email" x-model="loginEmail" required placeholder="admin@promptgallery.com" class="w-full border dark:border-gray-700 dark:bg-gray-800 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-1">Password</label>
+                    <input type="password" x-model="loginPassword" required placeholder="••••••••" class="w-full border dark:border-gray-700 dark:bg-gray-800 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 rounded-xl hover:bg-indigo-700 transition shadow-md">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard View -->
+    <div x-show="isLoggedIn" class="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-950">
+        <header class="h-16 bg-white dark:bg-gray-900 border-b dark:border-gray-800 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
+            <div class="flex items-center space-x-3">
+                <button @click="sidebarOpen = !sidebarOpen" class="text-gray-600 dark:text-gray-300 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <span class="font-bold text-lg text-gray-800 dark:text-white">Supabase Admin Dashboard</span>
+            </div>
+        </header>
+
+        <!-- Slide-out Sidebar -->
+        <div x-show="sidebarOpen" class="fixed inset-0 z-40 flex">
+            <div @click="sidebarOpen = false" class="fixed inset-0 bg-black/50 transition-opacity"></div>
+            <aside class="relative w-80 bg-white dark:bg-gray-900 h-full shadow-2xl z-50 flex flex-col justify-between p-6">
+                <div>
+                    <div class="flex items-center justify-between pb-6 border-b dark:border-gray-800">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-bold">A</div>
+                            <div>
+                                <h4 class="font-bold text-sm text-gray-900 dark:text-white">Admin Account</h4>
+                                <p class="text-xs text-gray-500">Super Administrator</p>
+                            </div>
+                        </div>
+                        <button @click="sidebarOpen = false" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+                    </div>
+                </div>
+                <div class="pt-6 border-t dark:border-gray-800">
+                    <button @click="logout" class="w-full bg-red-50 dark:bg-red-950/40 text-red-600 font-semibold py-3 rounded-xl hover:bg-red-100 transition flex items-center justify-center space-x-2 text-sm">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Logout Session</span>
+                    </button>
+                </div>
+            </aside>
+        </div>
+
+        <main class="flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 pb-24">
+            <!-- Tabs -->
+            <div class="flex bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-1.5 mb-6 shadow-sm">
+                <button @click="currentTab = 'create'" :class="currentTab === 'create' ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-gray-400'" class="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-center">Create Post</button>
+                <button @click="currentTab = 'manage'" :class="currentTab === 'manage' ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-gray-400'" class="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition text-center">Manage Posts</button>
+            </div>
+
+            <!-- Create Section -->
+            <div x-show="currentTab === 'create'" class="space-y-6">
+                <div class="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-4 shadow-sm space-y-4">
+                    <div id="image-container" class="relative w-full max-w-[240px] mx-auto bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden flex items-center justify-center border-2 border-dashed border-gray-200 dark:border-gray-700 aspect-[4/5]">
+                        <template x-if="post.image">
+                            <img :src="post.image" class="w-full h-full object-cover">
+                        </template>
+                        <template x-if="!post.image">
+                            <label class="cursor-pointer flex flex-col items-center justify-center p-6 text-center w-full h-full">
+                                <i class="fa-solid fa-cloud-arrow-up text-3xl text-indigo-500 mb-2"></i>
+                                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Upload Image</span>
+                                <input type="file" id="imageFile" accept="image/*" @change="handleImagePreview" class="hidden">
+                            </label>
+                        </template>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-2">Title</label>
+                    <input type="text" x-model="post.title" placeholder="Enter post title..." class="w-full bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-2">Hidden Prompt</label>
+                    <textarea x-model="post.prompt" rows="3" placeholder="Write prompt here..." class="w-full bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-2">Category</label>
+                    <input type="text" x-model="post.category" placeholder="e.g. Cyberpunk" class="w-full bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600">
+                </div>
+
+                <button @click="savePostToSupabase" class="w-full bg-indigo-600 text-white font-semibold py-3.5 rounded-xl hover:bg-indigo-700 transition shadow-md text-sm">Upload & Publish to Supabase</button>
+            </div>
+
+            <!-- Manage Section -->
+            <div x-show="currentTab === 'manage'" class="space-y-4">
+                <h2 class="font-bold text-lg text-gray-800 dark:text-white">Published Posts</h2>
+                <div class="space-y-3">
+                    <template x-for="(item, index) in published" :key="item.id">
+                        <div class="bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-2xl p-4 shadow-sm flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <img :src="item.image" class="w-14 h-14 object-cover rounded-xl border">
+                                <div>
+                                    <h4 class="font-semibold text-sm text-gray-800 dark:text-white" x-text="item.title"></h4>
+                                    <span class="text-xs text-indigo-500" x-text="item.category"></span>
+                                </div>
+                            </div>
+                            <button @click="deletePost(item.id)" class="bg-red-50 text-red-600 px-3 py-2 rounded-xl text-xs font-semibold hover:bg-red-100"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Yahan apna Supabase URL aur Anon Key lagayein
+        const SUPABASE_URL = 'https://mjhkaeuranonnipuwbwa.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qaGthZXVyYW5vbm5pcHV3YndhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1OTkxMDcsImV4cCI6MjEwNDE3NTEwN30.fc6eMYlsS8BrvJWxnwxl2ERnjcsiYXyh-Z3xohI9ecs';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function adminSystem() {
+            return {
+                isLoggedIn: false,
+                isDarkMode: false,
+                loginEmail: '',
+                loginPassword: '',
+                sidebarOpen: false,
+                currentTab: 'create',
+                toast: { show: false, title: '', message: '', type: 'success' },
+                post: { title: '', prompt: '', category: 'Cyberpunk', image: '' },
+                published: [],
+
+                init() {
+                    this.fetchPosts();
+                },
+
+                login() {
+                    if (this.loginEmail && this.loginPassword) {
+                        this.isLoggedIn = true;
+                    }
+                },
+
+                logout() {
+                    this.isLoggedIn = false;
+                },
+
+                handleImagePreview(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => { this.post.image = e.target.result; };
+                        reader.readAsDataURL(file);
+                    }
+                },
+
+                showToast(title, message, type = 'success') {
+                    this.toast = { show: true, title, message, type };
+                    setTimeout(() => { this.toast.show = false; }, 2000);
+                },
+
+                async savePostToSupabase() {
+                    if (!this.post.title) {
+                        this.showToast('Error', 'Please enter a title', 'info');
+                        return;
+                    }
+
+                    this.showToast('Uploading', 'Saving image and data to Supabase...');
+
+                    const fileInput = document.getElementById('imageFile');
+                    let imageUrl = this.post.image;
+
+                    if (fileInput.files[0]) {
+                        const file = fileInput.files[0];
+                        const fileName = `${Date.now()}_${file.name}`;
+                        
+                        const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                            .from('post-images')
+                            .upload(fileName, file);
+
+                        if (uploadError) {
+                            this.showToast('Error', uploadError.message, 'info');
+                            return;
+                        }
+
+                        const { data: urlData } = supabaseClient.storage
+                            .from('post-images')
+                            .getPublicUrl(fileName);
+                        
+                        imageUrl = urlData.publicUrl;
+                    }
+
+                    const { error: dbError } = await supabaseClient.from('posts').insert([{
+                        title: this.post.title,
+                        prompt: this.post.prompt,
+                        category: this.post.category,
+                        image: imageUrl
+                    }]);
+
+                    if (dbError) {
+                        this.showToast('Error', dbError.message, 'info');
+                        return;
+                    }
+
+                    this.showToast('Success', 'Post published successfully!');
+                    this.post = { title: '', prompt: '', category: 'Cyberpunk', image: '' };
+                    this.fetchPosts();
+                    this.currentTab = 'manage';
+                },
+
+                async fetchPosts() {
+                    const { data, error } = await supabaseClient.from('posts').select('*').order('id', { ascending: false });
+                    if (!error) {
+                        this.published = data;
+                    }
+                },
+
+                async deletePost(id) {
+                    const { error } = await supabaseClient.from('posts').delete().eq('id', id);
+                    if (!error) {
+                        this.showToast('Deleted', 'Post removed successfully');
+                        this.fetchPosts();
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

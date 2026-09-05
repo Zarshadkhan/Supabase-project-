@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Prompt Gallery</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#09090b">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-white dark:bg-black text-neutral-900 dark:text-white antialiased pb-24 selection:bg-purple-500 transition-colors duration-200 overflow-x-hidden">
+
+  <!-- TOP STICKY HEADER & CATEGORY CHIPS -->
+  <div id="stickyHeaderGroup" class="fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5">
+    <header id="mainHeader" class="px-4 py-3 transition-all duration-300 ease-in-out">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-2 cursor-pointer" id="logoHomeBtn">
+          <img src="assets/logo.png" alt="Logo" class="w-7 h-7 object-contain" onerror="this.src='https://via.placeholder.com/32'">
+          <span class="font-bold text-base tracking-tight text-neutral-900 dark:text-white">Prompt Gallery</span>
+        </div>
+        
+        <button id="themeToggle" class="relative flex items-center justify-between w-16 h-8 px-1.5 rounded-full bg-sky-300 dark:bg-indigo-950 border border-sky-400/40 dark:border-indigo-700/50 shadow-inner transition-colors duration-500 overflow-hidden cursor-pointer group" title="Toggle Theme">
+          <div class="absolute inset-0 bg-gradient-to-r from-amber-300 to-sky-400 dark:from-indigo-900 dark:to-slate-900 opacity-90 transition-opacity duration-500"></div>
+          
+          <span class="relative z-10 flex items-center justify-center text-amber-500 dark:text-amber-300/40 transition-colors duration-300">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 100 2h1z" clip-rule="evenodd"/>
+            </svg>
+          </span>
+
+          <span class="relative z-10 flex items-center justify-center text-sky-200/40 dark:text-indigo-200 transition-colors duration-300">
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+            </svg>
+          </span>
+
+          <div class="absolute left-1 top-1 w-6 h-6 rounded-full bg-white dark:bg-slate-200 shadow-md transform dark:translate-x-8 transition-transform duration-300 ease-spring"></div>
+        </button>
+      </div>
+    </header>
+
+    <div id="categoryContainer" class="px-3 pb-2.5">
+      <div class="max-w-7xl mx-auto flex items-center gap-1.5 overflow-x-auto no-scrollbar" id="categoryChips">
+        <button data-category="All" class="chip active px-3.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all bg-neutral-900 text-white dark:bg-white dark:text-black">All</button>
+        <button data-category="Cinematic" class="chip px-3.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all bg-neutral-100 text-neutral-700 dark:bg-white/10 dark:text-gray-300 hover:bg-neutral-200 dark:hover:bg-white/20">Cinematic</button>
+        <button data-category="Cyberpunk" class="chip px-3.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all bg-neutral-100 text-neutral-700 dark:bg-white/10 dark:text-gray-300 hover:bg-neutral-200 dark:hover:bg-white/20">Cyberpunk</button>
+        <button data-category="Anime" class="chip px-3.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all bg-neutral-100 text-neutral-700 dark:bg-white/10 dark:text-gray-300 hover:bg-neutral-200 dark:hover:bg-white/20">Anime</button>
+        <button data-category="Portraits" class="chip px-3.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all bg-neutral-100 text-neutral-700 dark:bg-white/10 dark:text-gray-300 hover:bg-neutral-200 dark:hover:bg-white/20">Portraits</button>
+        <button data-category="3D Render" class="chip px-3.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all bg-neutral-100 text-neutral-700 dark:bg-white/10 dark:text-gray-300 hover:bg-neutral-200 dark:hover:bg-white/20">3D Render</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOME PAGE VIEW -->
+  <main id="homePage" class="page-view max-w-7xl mx-auto px-2 pt-24 pb-4">
+    <div id="galleryGrid" class="columns-2 md:columns-3 lg:columns-4 gap-2 space-y-2"></div>
+  </main>
+
+  <!-- SEARCH PAGE VIEW -->
+  <main id="searchPage" class="page-view hidden max-w-7xl mx-auto px-3 pt-6 pb-4">
+    <form id="searchForm" class="flex items-center gap-3 max-w-xl mx-auto mb-8 sticky top-4 z-30">
+      
+      <button type="button" id="searchBackBtn" class="p-3 rounded-full bg-neutral-100 dark:bg-neutral-900 text-neutral-800 dark:text-white hover:scale-105 active:scale-95 border border-black/5 dark:border-white/10 shadow-sm transition-all shrink-0">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+
+      <div class="relative flex-1 group">
+        <div class="absolute -inset-0.5 rounded-full bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-500 opacity-60 blur-md group-hover:opacity-100 group-focus-within:opacity-100 transition duration-500"></div>
+
+        <div class="relative flex items-center bg-white dark:bg-[#0b0c10] border border-sky-400/50 dark:border-sky-500/40 rounded-full px-5 py-3.5 shadow-xl transition-all">
+          <span class="text-sm mr-2.5 opacity-70">🔍</span>
+
+          <input type="search" id="searchInput" placeholder="Search prompts, styles, ideas..." 
+                 class="w-full bg-transparent text-sm text-neutral-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 outline-none font-medium tracking-wide">
+
+          <button type="submit" class="p-1 text-sky-500 hover:text-sky-400 hover:scale-110 active:scale-90 transition-all shrink-0 ml-2" title="Search">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3c.132 0 .263 0 .393 0A7.5 7.5 0 0 0 19.5 10.5c0 .13 0 .261 0 .393a7.5 7.5 0 0 1-7.5 7.5c-.13 0-.261 0-.393 0A7.5 7.5 0 0 1 4.5 11c0-.13 0-.26 0-.393A7.5 7.5 0 0 1 12 3z"/>
+              <path d="M18.5 4.5l1 1"/>
+              <path d="M20 3.5l-1 1"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+    </form>
+
+    <div id="ideasSection" class="max-w-2xl mx-auto">
+      <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">Ideas for you</h2>
+      <div class="grid grid-cols-2 gap-2 mb-6">
+        <div onclick="executeSearch('Neon Cyberpunk')" class="idea-card relative h-28 rounded-2xl overflow-hidden cursor-pointer group">
+          <img src="https://picsum.photos/300/200?random=101" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end p-3">
+            <span class="text-white font-bold text-sm">Neon Cyberpunk</span>
+          </div>
+        </div>
+        <div onclick="executeSearch('3D Pixar Style')" class="idea-card relative h-28 rounded-2xl overflow-hidden cursor-pointer group">
+          <img src="https://picsum.photos/300/200?random=102" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end p-3">
+            <span class="text-white font-bold text-sm">3D Pixar Style</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="searchResultsSection" class="hidden">
+      <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1" id="searchResultTitle">Results</h2>
+      <div id="searchGrid" class="columns-2 md:columns-3 lg:columns-4 gap-2 space-y-2"></div>
+    </div>
+  </main>
+
+  <!-- POST DETAIL PAGE VIEW -->
+  <main id="postDetailPage" class="page-view hidden max-w-2xl mx-auto px-0 pt-0 pb-12">
+    
+    <div class="relative w-full px-2 sm:px-0">
+      <button id="postDetailBackBtn" class="absolute top-4 left-6 sm:left-4 z-30 p-2.5 rounded-full bg-black/60 backdrop-blur-md text-white hover:bg-black/80 transition-all border border-white/10 shadow-lg">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      
+      <img id="detailImage" src="" alt="Post Detail" class="w-full h-auto max-h-[80vh] object-cover rounded-3xl shadow-lg">
+    </div>
+
+    <div class="px-4 pt-4">
+      <div class="mb-4">
+        <span id="detailCategory" class="inline-block mb-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-gray-300">Category</span>
+        <h1 id="detailTitle" class="text-xl font-bold tracking-tight leading-snug text-neutral-900 dark:text-white">Post Title</h1>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3 mb-6 w-full">
+        
+        <!-- Download Button -->
+        <button id="downloadImageBtn" class="group relative flex items-center justify-center gap-2 py-3 px-2 rounded-2xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/80 dark:border-white/10 text-neutral-800 dark:text-neutral-200 text-xs font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:scale-[1.02] active:scale-95 transition-all duration-200 shadow-sm overflow-hidden">
+          <div id="downloadProgressBar" class="absolute inset-0 bg-sky-500/20 dark:bg-sky-500/30 w-0 pointer-events-none transition-all"></div>
+          <svg class="w-4 h-4 transition-transform group-hover:-translate-y-0.5 relative z-10 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+          <span id="downloadBtnText" class="relative z-10 truncate">Download</span>
+        </button>
+
+        <!-- Redesigned Share Button -->
+        <button id="openShareModalBtn" class="group relative flex items-center justify-center gap-2 py-3 px-2 rounded-2xl bg-gradient-to-r from-sky-500/10 to-indigo-500/10 hover:from-sky-500/20 hover:to-indigo-500/20 border border-sky-500/30 text-sky-600 dark:text-sky-400 text-xs font-semibold hover:scale-[1.02] active:scale-95 transition-all duration-200 shadow-sm">
+          <svg class="w-4 h-4 transition-transform group-hover:rotate-12 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+          </svg>
+          <span class="truncate">Share</span>
+        </button>
+
+        <!-- Copy Prompt Button -->
+        <button id="copyPromptMainBtn" class="group relative flex items-center justify-center gap-2 py-3 px-2 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-semibold hover:scale-[1.02] active:scale-95 transition-all duration-200 shadow-lg shadow-red-500/25 overflow-hidden">
+          <div id="copyProgressBar" class="absolute inset-0 bg-white/25 w-0 pointer-events-none transition-all"></div>
+          <svg class="w-4 h-4 transition-transform group-hover:scale-110 relative z-10 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+          </svg>
+          <span id="copyBtnText" class="relative z-10 truncate">Prompt</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="px-2 border-t border-neutral-100 dark:border-neutral-900 pt-6">
+      <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 text-center">More to explore</h2>
+      <div id="relatedGrid" class="columns-2 md:columns-3 gap-2 space-y-2"></div>
+    </div>
+  </main>
+
+  <!-- REDESIGNED MODERN SHARE MODAL -->
+  <div id="shareModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md hidden transition-opacity duration-300 p-4">
+    <div class="w-full max-w-sm p-6 rounded-3xl bg-white/90 dark:bg-neutral-900/90 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-2xl transition-all transform scale-100">
+      
+      <div class="flex items-center justify-between pb-4 mb-5 border-b border-black/10 dark:border-white/10">
+        <div class="flex items-center gap-2">
+          <span class="p-2 rounded-xl bg-sky-500/10 text-sky-500 text-sm">🌐</span>
+          <h3 class="text-base font-bold text-neutral-900 dark:text-white">Share Prompt</h3>
+        </div>
+        <button id="closeShareModalBtn" class="p-1.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-gray-500 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Social Share Grid -->
+      <div class="grid grid-cols-4 gap-3 mb-6">
+        <button id="shareWhatsApp" class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:scale-105 active:scale-95 transition-all">
+          <span class="text-xl">💬</span>
+          <span class="text-[10px] font-semibold">WhatsApp</span>
+        </button>
+        <button id="shareTelegram" class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/20 hover:scale-105 active:scale-95 transition-all">
+          <span class="text-xl">✈️</span>
+          <span class="text-[10px] font-semibold">Telegram</span>
+        </button>
+        <button id="shareTwitter" class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-neutral-500/10 hover:bg-neutral-500/20 text-neutral-800 dark:text-white border border-neutral-500/20 hover:scale-105 active:scale-95 transition-all">
+          <span class="text-xl">🐦</span>
+          <span class="text-[10px] font-semibold">Twitter</span>
+        </button>
+        <button id="shareFacebook" class="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 hover:scale-105 active:scale-95 transition-all">
+          <span class="text-xl">📘</span>
+          <span class="text-[10px] font-semibold">Facebook</span>
+        </button>
+      </div>
+
+      <!-- Copy URL Box -->
+      <div class="flex items-center justify-between p-1.5 pl-3 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10">
+        <span id="shareUrlText" class="text-xs text-gray-500 dark:text-gray-400 truncate mr-2 font-mono">https://promptgallery.app</span>
+        <button id="copyShareLinkBtn" class="py-2 px-4 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-semibold shrink-0 transition-all shadow-md shadow-red-500/20">
+          Copy Link
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ULTRA MODERN PROFESSIONAL CAPSULE BOTTOM NAV -->
+  <div id="bottomNav" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300">
+    <nav class="relative flex items-center gap-1.5 bg-white/70 dark:bg-black/70 backdrop-blur-3xl border border-red-500/30 dark:border-red-500/40 rounded-full p-2 shadow-[0_15px_35px_rgba(239,68,68,0.2)]">
+      
+      <div class="absolute top-0 left-4 right-4 h-[2px] bg-gradient-to-r from-transparent via-red-500 to-transparent shadow-[0_0_8px_#ef4444]"></div>
+
+      <button id="navHome" class="relative flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold text-white bg-gradient-to-r from-red-600 to-rose-600 shadow-md shadow-red-500/30 active:scale-95 transition-all duration-300">
+        <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+        </svg>
+        <span class="tracking-wider">Home</span>
+      </button>
+
+      <button id="navSearch" class="relative flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-xs font-semibold text-neutral-600 dark:text-neutral-300 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10 active:scale-95 transition-all duration-300">
+        <span class="text-sm">🔍</span>
+        <span class="tracking-wider">Search</span>
+      </button>
+
+    </nav>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
