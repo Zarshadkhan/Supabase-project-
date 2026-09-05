@@ -11,9 +11,9 @@
         }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <!-- Supabase CDN -->
+    <!-- Supabase CDN (Loaded before Alpine) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 font-sans antialiased text-gray-900 dark:text-gray-100 transition-colors duration-200" x-data="adminSystem()">
 
@@ -160,10 +160,16 @@
     </div>
 
     <script>
-        // Supabase URL aur Anon Key Replace Karein
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Supabase Client Helper Function
+        let clientInstance = null;
+        function getSupabase() {
+            if (!clientInstance) {
+                const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+                const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+                clientInstance = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+            return clientInstance;
+        }
 
         function adminSystem() {
             return {
@@ -214,13 +220,14 @@
                     try {
                         let imageUrl = this.post.image;
                         const fileInput = document.getElementById('imageFile');
+                        const client = getSupabase();
 
                         // Image Upload Logic
                         if (fileInput && fileInput.files[0]) {
                             const file = fileInput.files[0];
                             const fileName = `${Date.now()}_${file.name}`;
                             
-                            const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                            const { data: uploadData, error: uploadError } = await client.storage
                                 .from('post-images')
                                 .upload(fileName, file);
 
@@ -229,7 +236,7 @@
                                 return;
                             }
 
-                            const { data: urlData } = supabaseClient.storage
+                            const { data: urlData } = client.storage
                                 .from('post-images')
                                 .getPublicUrl(fileName);
                             
@@ -237,7 +244,7 @@
                         }
 
                         // Database Insert Logic
-                        const { data, error: dbError } = await supabaseClient
+                        const { data, error: dbError } = await client
                             .from('posts')
                             .insert([{
                                 title: this.post.title,
@@ -262,14 +269,20 @@
                 },
 
                 async fetchPosts() {
-                    const { data, error } = await supabaseClient.from('posts').select('*').order('id', { ascending: false });
-                    if (!error && data) {
-                        this.published = data;
+                    try {
+                        const client = getSupabase();
+                        const { data, error } = await client.from('posts').select('*').order('id', { ascending: false });
+                        if (!error && data) {
+                            this.published = data;
+                        }
+                    } catch (e) {
+                        console.log('Error fetching posts:', e);
                     }
                 },
 
                 async deletePost(id) {
-                    const { error } = await supabaseClient.from('posts').delete().eq('id', id);
+                    const client = getSupabase();
+                    const { error } = await client.from('posts').delete().eq('id', id);
                     if (!error) {
                         this.showToast('Deleted', 'Post removed successfully');
                         this.fetchPosts();
