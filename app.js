@@ -26,6 +26,8 @@ async function fetchPostsFromSupabase() {
   if (!error && data) {
     postsData = data;
     renderGallery(postsData, galleryGrid);
+  } else {
+    console.error("Error fetching posts:", error);
   }
 }
 
@@ -42,10 +44,9 @@ function createPostCard(post) {
   card.className = "break-inside-avoid rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-900 cursor-pointer group relative";
   card.onclick = () => openPostDetail(post.id, true);
 
-  // Pehle console.log likhein taaki browser ke console mein data print ho
-console.log("Post data from Supabase:", post);
+  console.log("Post data from Supabase:", post);
 
-card.innerHTML = `
+  card.innerHTML = `
     <div class="relative overflow-hidden">
       <img src="${post.image}" alt="${post.title}" loading="lazy" class="w-full object-cover group-hover:scale-105 transition-transform duration-300">
       <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2.5">
@@ -53,7 +54,8 @@ card.innerHTML = `
       </div>
     </div>
   `;
-return card;
+  return card;
+}
 
 function renderGallery(posts = postsData, container = galleryGrid) {
   if (!container) return;
@@ -95,3 +97,4 @@ navHome?.addEventListener('click', () => showHomePage(true));
 document.addEventListener('DOMContentLoaded', () => {
   fetchPostsFromSupabase();
 });
+                        
