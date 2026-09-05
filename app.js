@@ -42,7 +42,10 @@ function createPostCard(post) {
   card.className = "break-inside-avoid rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-900 cursor-pointer group relative";
   card.onclick = () => openPostDetail(post.id, true);
 
-  card.innerHTML = `
+  // Pehle console.log likhein taaki browser ke console mein data print ho
+console.log("Post data from Supabase:", post);
+
+card.innerHTML = `
     <div class="relative overflow-hidden">
       <img src="${post.image}" alt="${post.title}" loading="lazy" class="w-full object-cover group-hover:scale-105 transition-transform duration-300">
       <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2.5">
@@ -50,8 +53,7 @@ function createPostCard(post) {
       </div>
     </div>
   `;
-  return card;
-}
+return card;
 
 function renderGallery(posts = postsData, container = galleryGrid) {
   if (!container) return;
