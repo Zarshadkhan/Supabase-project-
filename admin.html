@@ -126,7 +126,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-2">Hidden Prompt</label>
+                    <label class="block text-xs font-semibold uppercase text-gray-500 mb-2">Prompt</label>
                     <textarea x-model="post.prompt" rows="3" placeholder="Write prompt here..." class="w-full bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"></textarea>
                 </div>
 
@@ -160,9 +160,9 @@
     </div>
 
     <script>
-        // Yahan apna Supabase URL aur Anon Key lagayein
-        const SUPABASE_URL = 'https://mjhkaeuranonnipuwbwa.supabase.co/rest/v1/';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qaGthZXVyYW5vbm5pcHV3YndhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1OTkxMDcsImV4cCI6MjEwNDE3NTEwN30.fc6eMYlsS8BrvJWxnwxl2ERnjcsiYXyh-Z3xohI9ecs';
+        // Supabase URL aur Anon Key Replace Karein
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         function adminSystem() {
@@ -202,61 +202,68 @@
 
                 showToast(title, message, type = 'success') {
                     this.toast = { show: true, title, message, type };
-                    setTimeout(() => { this.toast.show = false; }, 2000);
+                    setTimeout(() => { this.toast.show = false; }, 3000);
                 },
 
                 async savePostToSupabase() {
                     if (!this.post.title) {
-                        this.showToast('Error', 'Please enter a title', 'info');
+                        alert('Please enter a title');
                         return;
                     }
 
-                    this.showToast('Uploading', 'Saving image and data to Supabase...');
+                    try {
+                        let imageUrl = this.post.image;
+                        const fileInput = document.getElementById('imageFile');
 
-                    const fileInput = document.getElementById('imageFile');
-                    let imageUrl = this.post.image;
+                        // Image Upload Logic
+                        if (fileInput && fileInput.files[0]) {
+                            const file = fileInput.files[0];
+                            const fileName = `${Date.now()}_${file.name}`;
+                            
+                            const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                                .from('post-images')
+                                .upload(fileName, file);
 
-                    if (fileInput.files[0]) {
-                        const file = fileInput.files[0];
-                        const fileName = `${Date.now()}_${file.name}`;
-                        
-                        const { data: uploadData, error: uploadError } = await supabaseClient.storage
-                            .from('post-images')
-                            .upload(fileName, file);
+                            if (uploadError) {
+                                alert('Storage Error: ' + uploadError.message);
+                                return;
+                            }
 
-                        if (uploadError) {
-                            this.showToast('Error', uploadError.message, 'info');
+                            const { data: urlData } = supabaseClient.storage
+                                .from('post-images')
+                                .getPublicUrl(fileName);
+                            
+                            imageUrl = urlData.publicUrl;
+                        }
+
+                        // Database Insert Logic
+                        const { data, error: dbError } = await supabaseClient
+                            .from('posts')
+                            .insert([{
+                                title: this.post.title,
+                                prompt: this.post.prompt || '',
+                                category: this.post.category || 'General',
+                                image: imageUrl || ''
+                            }]);
+
+                        if (dbError) {
+                            alert('Database Error: ' + dbError.message);
                             return;
                         }
 
-                        const { data: urlData } = supabaseClient.storage
-                            .from('post-images')
-                            .getPublicUrl(fileName);
-                        
-                        imageUrl = urlData.publicUrl;
+                        alert('Success! Post published to Supabase.');
+                        this.post = { title: '', prompt: '', category: 'Cyberpunk', image: '' };
+                        this.fetchPosts();
+                        this.currentTab = 'manage';
+
+                    } catch (err) {
+                        alert('Unexpected Error: ' + err.message);
                     }
-
-                    const { error: dbError } = await supabaseClient.from('posts').insert([{
-                        title: this.post.title,
-                        prompt: this.post.prompt,
-                        category: this.post.category,
-                        image: imageUrl
-                    }]);
-
-                    if (dbError) {
-                        this.showToast('Error', dbError.message, 'info');
-                        return;
-                    }
-
-                    this.showToast('Success', 'Post published successfully!');
-                    this.post = { title: '', prompt: '', category: 'Cyberpunk', image: '' };
-                    this.fetchPosts();
-                    this.currentTab = 'manage';
                 },
 
                 async fetchPosts() {
                     const { data, error } = await supabaseClient.from('posts').select('*').order('id', { ascending: false });
-                    if (!error) {
+                    if (!error && data) {
                         this.published = data;
                     }
                 },
