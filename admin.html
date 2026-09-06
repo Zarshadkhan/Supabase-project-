@@ -189,24 +189,59 @@
                 selectedFile: null, // Image File Variable 💾
                 published: [],
 
-                init() {
-                    this.fetchPosts();
-                },
-
-                login() {
-                    if (this.loginEmail && this.loginPassword) {
+                async init() {
+                    // Page load par check karein ke session active hai ya nahi
+                    const client = getSupabase();
+                    const { data: { session } } = await client.auth.getSession();
+                    
+                    if (session) {
                         this.isLoggedIn = true;
+                        this.fetchPosts();
                     }
                 },
 
-                logout() {
+                async login() {
+                    try {
+                        const client = getSupabase();
+                        // 🔑 Asli Supabase Auth Login
+                        const { data, error } = await client.auth.signInWithPassword({
+                            email: this.loginEmail,
+                            password: this.loginPassword,
+                        });
+
+                        if (error) {
+                            alert('Login Failed: ' + error.message);
+                            return;
+                        }
+
+                        // 🛡️ Extra check: ensure email is correct
+                        if (data.user.email === 'zarshadkhan269@gmail.com') {
+                            this.isLoggedIn = true;
+                            this.showToast('Welcome', 'Login successful!');
+                            this.fetchPosts();
+                        } else {
+                            alert('Unauthorized: Sirf Admin Gmail hi login kar sakti hai!');
+                            await client.auth.signOut();
+                        }
+
+                    } catch (err) {
+                        alert('Error: ' + err.message);
+                    }
+                },
+
+                async logout() {
+                    const client = getSupabase();
+                    await client.auth.signOut();
                     this.isLoggedIn = false;
+                    this.loginEmail = '';
+                    this.loginPassword = '';
+                    this.sidebarOpen = false;
                 },
 
                 handleImagePreview(event) {
                     const file = event.target.files[0];
                     if (file) {
-                        this.selectedFile = file; // 👈 File yahan mehfooz (save) ho rahi hai
+                        this.selectedFile = file;
                         const reader = new FileReader();
                         reader.onload = (e) => { this.post.image = e.target.result; };
                         reader.readAsDataURL(file);
