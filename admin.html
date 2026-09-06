@@ -11,26 +11,31 @@
         }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Supabase CDN (Loaded before Alpine) -->
+    <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 font-sans antialiased text-gray-900 dark:text-gray-100 transition-colors duration-200" x-data="adminSystem()">
 
-    <!-- Toast Notification -->
+    <!-- Modern Dynamic Toast Notification 🍞 -->
     <div x-show="toast.show" 
          x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0 scale-90 translate-y-2"
+         x-transition:enter-start="opacity-0 scale-90 -translate-y-4"
          x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+         x-transition:leave-end="opacity-0 scale-90 -translate-y-4"
+         class="fixed top-5 left-1/2 -translate-x-1/2 z-50 p-4 pointer-events-none w-full max-w-sm"
          style="display: none;">
-        <div class="pointer-events-auto bg-gray-900/90 dark:bg-white/90 backdrop-blur-xl text-white dark:text-gray-900 px-6 py-4 rounded-3xl shadow-2xl border border-gray-800 dark:border-gray-200 flex items-center space-x-4 max-w-sm w-full">
-            <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-base shrink-0 shadow-lg" :class="toast.type === 'success' ? 'bg-emerald-500 text-white shadow-emerald-500/30' : 'bg-indigo-500 text-white shadow-indigo-500/30'">
-                <i class="fa-solid" :class="toast.type === 'success' ? 'fa-check' : 'fa-info'"></i>
+        <div class="pointer-events-auto bg-gray-900/90 dark:bg-gray-800/90 backdrop-blur-xl text-white px-5 py-4 rounded-2xl shadow-2xl border border-gray-700/50 flex items-center space-x-4">
+            <!-- Dynamic Icon & Color Badge 🎨 -->
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center text-base shrink-0 shadow-md" 
+                 :class="toast.type === 'success' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'">
+                <i class="fa-solid" :class="toast.type === 'success' ? 'fa-circle-check' : 'fa-triangle-exclamation'"></i>
             </div>
-            <div>
+            <div class="flex-1">
                 <p class="font-bold text-sm tracking-tight" x-text="toast.title"></p>
-                <p class="text-xs opacity-80 mt-0.5" x-text="toast.message"></p>
+                <p class="text-xs text-gray-300 mt-0.5" x-text="toast.message"></p>
             </div>
         </div>
     </div>
@@ -186,11 +191,10 @@
                 currentTab: 'create',
                 toast: { show: false, title: '', message: '', type: 'success' },
                 post: { title: '', prompt: '', category: 'Cyberpunk', image: '' },
-                selectedFile: null, // Image File Variable 💾
+                selectedFile: null,
                 published: [],
 
                 async init() {
-                    // Page load par check karein ke session active hai ya nahi
                     const client = getSupabase();
                     const { data: { session } } = await client.auth.getSession();
                     
@@ -203,29 +207,28 @@
                 async login() {
                     try {
                         const client = getSupabase();
-                        // 🔑 Asli Supabase Auth Login
                         const { data, error } = await client.auth.signInWithPassword({
                             email: this.loginEmail,
                             password: this.loginPassword,
                         });
 
                         if (error) {
-                            alert('Login Failed: ' + error.message);
+                            // Custom Toast on Login Error ❌
+                            this.showToast('Login Failed', error.message, 'error');
                             return;
                         }
 
-                        // 🛡️ Extra check: ensure email is correct
                         if (data.user.email === 'zarshadkhan269@gmail.com') {
                             this.isLoggedIn = true;
-                            this.showToast('Welcome', 'Login successful!');
+                            this.showToast('Welcome Back', 'Login successful!', 'success');
                             this.fetchPosts();
                         } else {
-                            alert('Unauthorized: Sirf Admin Gmail hi login kar sakti hai!');
+                            this.showToast('Unauthorized', 'Sirf Admin Gmail hi access kar sakti hai!', 'error');
                             await client.auth.signOut();
                         }
 
                     } catch (err) {
-                        alert('Error: ' + err.message);
+                        this.showToast('Error', err.message, 'error');
                     }
                 },
 
@@ -236,6 +239,7 @@
                     this.loginEmail = '';
                     this.loginPassword = '';
                     this.sidebarOpen = false;
+                    this.showToast('Logged Out', 'Aapka session khatam ho gaya hai', 'success');
                 },
 
                 handleImagePreview(event) {
@@ -255,12 +259,12 @@
 
                 showToast(title, message, type = 'success') {
                     this.toast = { show: true, title, message, type };
-                    setTimeout(() => { this.toast.show = false; }, 3000);
+                    setTimeout(() => { this.toast.show = false; }, 3500);
                 },
 
                 async savePostToSupabase() {
                     if (!this.post.title) {
-                        alert('Please enter a title');
+                        this.showToast('Missing Title', 'Kripya title zaroor enter karein', 'error');
                         return;
                     }
 
@@ -268,7 +272,6 @@
                         let imageUrl = '';
                         const client = getSupabase();
 
-                        // 1. Storage Upload 📤
                         if (this.selectedFile) {
                             const fileExt = this.selectedFile.name.split('.').pop();
                             const fileName = `${Date.now()}.${fileExt}`;
@@ -278,11 +281,10 @@
                                 .upload(fileName, this.selectedFile);
 
                             if (uploadError) {
-                                alert('Storage Error: ' + uploadError.message);
+                                this.showToast('Storage Error', uploadError.message, 'error');
                                 return;
                             }
 
-                            // Storage URL Retrieve 🔗
                             const { data: urlData } = client.storage
                                 .from('post-images')
                                 .getPublicUrl(fileName);
@@ -290,7 +292,6 @@
                             imageUrl = urlData.publicUrl;
                         }
 
-                        // 2. Database Insert 💾
                         const { data, error: dbError } = await client
                             .from('posts')
                             .insert([{
@@ -301,13 +302,12 @@
                             }]);
 
                         if (dbError) {
-                            alert('Database Error: ' + dbError.message);
+                            this.showToast('Database Error', dbError.message, 'error');
                             return;
                         }
 
-                        this.showToast('Success', 'Post published successfully!');
+                        this.showToast('Published!', 'Post kamyabi se upload ho gayi hai', 'success');
                         
-                        // Form Reset 🔄
                         this.post = { title: '', prompt: '', category: 'Cyberpunk', image: '' };
                         this.selectedFile = null;
                         
@@ -315,7 +315,7 @@
                         this.currentTab = 'manage';
 
                     } catch (err) {
-                        alert('Unexpected Error: ' + err.message);
+                        this.showToast('Error', err.message, 'error');
                     }
                 },
 
@@ -335,8 +335,10 @@
                     const client = getSupabase();
                     const { error } = await client.from('posts').delete().eq('id', id);
                     if (!error) {
-                        this.showToast('Deleted', 'Post removed successfully');
+                        this.showToast('Deleted', 'Post successfully remove ho gayi', 'success');
                         this.fetchPosts();
+                    } else {
+                        this.showToast('Delete Failed', error.message, 'error');
                     }
                 }
             }
